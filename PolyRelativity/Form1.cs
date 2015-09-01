@@ -14,7 +14,6 @@ using System.Threading;
 
 namespace PolyRelativity
 {
-  public enum EColor { Red, Green, Blue };
   public partial class Form1 : Form
   {
     public static CDrawer canvas = new CDrawer(1000, 1000);
