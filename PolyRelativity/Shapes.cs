@@ -8,17 +8,21 @@ using System.Drawing;
 
 namespace PolyRelativity
 {
+  //Instantiate interface that all will use to draw themselves to the canvas
   public interface IRender
   {
     void Render(CDrawer dr);
   }
+  //Instantiate interface requiring animated balls have a call that moves them one frame forward
   public interface IAnimate
   {
     void Tick();
   }
+  //Basic must abstract class. Implements IRender
   public abstract class Shape:IRender
   {
     protected Point position;
+    //Getter for point
     public Point Position
     {
       get { return position; }
@@ -31,12 +35,14 @@ namespace PolyRelativity
     {
       get { return size; }
     }
+    //Basic constructor. All derived shapes must have these parameters.
     public Shape(Point p, Color c,Shape parent=null)
     {
       this.position = p;
       this.color = c;
       this.parent = parent;
     }
+    //Placeholder virtual method. Allows subshapes to define their own meaning of render, but still have render universally callable.
     protected abstract void vRender(CDrawer dr);
     public void Render(CDrawer dr)
     {
@@ -46,16 +52,19 @@ namespace PolyRelativity
 
 
   }
+  //Subclass of Shape, implements IAnimate
   public abstract class AniShape : Shape, IAnimate
   {
     protected double sequence_val;
     protected double sequence_delta;
     public AniShape(Point p, Color c,double sv,double sd)
-      : base(p, c)
+      : base(p, c) //Handle point and color as the basic Shape would
     {
+      //Additional animate-only values are assigned from constructor.
       this.sequence_delta = sd;
       this.sequence_val = sv;
     }
+    //Create placeholder virtual method
     public abstract void vTick();
 
     public void Tick()
@@ -63,6 +72,7 @@ namespace PolyRelativity
       vTick();
     }
   }
+  //Basic square, uncomplicated. Has additional size parameter, set in constructor.
   class FixedSquare : Shape
   {
     public FixedSquare(Point p,Color c,Shape parent=null)
@@ -70,17 +80,21 @@ namespace PolyRelativity
     {
       this.size = 20;
     }
+    //Implements unique version of vRender, drawing a rectangle. .Render() still calls vRender.
     protected override void vRender(CDrawer canvas)
     {
       canvas.AddRectangle(position.X - 10, position.Y - 10, size, size, color);
     }
   }
+  //Class for animated polygons. Extends AniShape.
   public class AniPoly : AniShape
   {
-    private int sides;
+    //Uniquely needs additional field: sides
+    protected int sides;
     public AniPoly(Point p, Color c,int sides,Shape parent,double sd,double sv=0)
       : base(p, c,sv,sd)
     {
+      //Sets rules for what sides can be. Sets size to 25
       if (sides >= 3) this.sides = sides;
       else throw new ArgumentException("Shape must have at least 3 sides");
       this.size = 25;
@@ -94,6 +108,7 @@ namespace PolyRelativity
       this.sequence_val += this.sequence_delta;
     }
   }
+  //Abstract class whose defining trait is not being an orphan
   public abstract class AniChild : AniShape
   {
     protected double distance;
@@ -103,9 +118,9 @@ namespace PolyRelativity
       this.distance = distance;
       if (parent != null) this.parent = parent;
       else throw new ArgumentException("Must supply a non-null parent");
-      Tick();
     }
   }
+  //General form of ball with parents.
   public abstract class AniBall : AniChild
   {
     public AniBall(Point p, Color c, Shape parent, double sd, double sv, double distance)
@@ -118,6 +133,7 @@ namespace PolyRelativity
       dr.AddCenteredEllipse(position.X, position.Y, size, size, color);
     }
   }
+  //Flashy ball with parents.
   class AniHighlight : AniChild
   {
     private int temp_size;
@@ -148,6 +164,7 @@ namespace PolyRelativity
       dr.AddCenteredEllipse(position.X, position.Y, temp_size, temp_size, Color.White);
     }
   }
+  //Animated ball ball that orbits its parent
   class OrbitBall : AniBall
   {
     private double ratio;
@@ -163,30 +180,27 @@ namespace PolyRelativity
       sequence_val += sequence_delta;
     }
   }
+  //Wobbles around its parent on a vertical axis
   class VWobbleBall : AniBall
   {
-    public VWobbleBall(Color c, double distance, Shape parent, double sd,double sv=0)
-      : base(new Point(0, 0), c, parent, sd, sv, distance)
-    {
-      position.X = parent.Position.X;
-    }
+    public VWobbleBall(Color c, double distance, Shape parent, double sd, double sv = 0)
+      : base(new Point(0, 0), c, parent, sd, sv, distance) { }
     public override void vTick()
     {
+      position.X = parent.Position.X;
       position.Y = parent.Position.Y + (int)(Math.Cos(sequence_val) *distance);
       sequence_val += sequence_delta;
     }
   }
+  //Wobbles around its parent on a horizontal axis
   class HWobbleBall : AniBall
   {
-    public HWobbleBall(Color c, double distance, Shape parent, double sd,double sv=0)
-      : base(new Point(0, 0), c, parent, sd, sv, distance)
-    {
-      position.Y = parent.Position.Y;
-    }
+    public HWobbleBall(Color c, double distance, Shape parent, double sd, double sv = 0)
+      : base(new Point(0, 0), c, parent, sd, sv, distance) { }
     public override void vTick()
     {
       position.X = parent.Position.X + (int)(Math.Cos(sequence_val) *distance);
-      
+      position.Y = parent.Position.Y;
       sequence_val += sequence_delta;
     }
   }

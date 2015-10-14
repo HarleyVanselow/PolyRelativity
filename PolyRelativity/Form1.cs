@@ -17,7 +17,7 @@ namespace PolyRelativity
   public partial class Form1 : Form
   {
     public static CDrawer canvas = new CDrawer(1000, 1000);
-    public EColor c = EColor.Red;
+    
     public static Random rand = new Random();
     static List<Shape> _shapes = new List<Shape>();
     public Form1()
